@@ -15,7 +15,8 @@
     </div>
   </div>
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-    <div id="network" style="height: 72vh;"></div>
+    <div id="network" style="height: 72vh; background-color: #fcfdff;
+         background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 22px 22px;"></div>
   </div>
   <p class="text-xs text-slate-400 mt-2">Scroll to zoom · drag to pan · click a node to open the job · use the controls (bottom-left) to re-fit.</p>
 </div>
@@ -36,22 +37,28 @@
     const rawNodes = {{ nodes | safe }};
     const edges = {{ edges | safe }};
     const groupColors = {
-      entry:   { background: "#60a5fa", border: "#2563eb" },
-      compute: { background: "#f59e0b", border: "#b45309" },
-      report:  { background: "#34d399", border: "#059669" },
-      other:   { background: "#cbd5e1", border: "#64748b" },
+      entry:   { background: "#eff6ff", border: "#3b82f6" },
+      compute: { background: "#fff7ed", border: "#f59e0b" },
+      report:  { background: "#ecfdf5", border: "#10b981" },
+      other:   { background: "#f8fafc", border: "#94a3b8" },
     };
     const nodes = rawNodes.map(function (n) {
       const c = groupColors[n.group] || groupColors.other;
-      const leaf = String(n.label).split("/").pop();   // compact, uniform labels
+      const leaf = String(n.label).split("/").pop();        // compact, uniform labels
+      const short = String(n.id).slice(0, 8);
       return Object.assign({}, n, {
-        label: leaf,
+        label: "<b>" + leaf + "</b>\n<code>" + short + "</code>",
         color: { background: c.background, border: c.border,
-                 highlight: { background: c.background, border: "#111827" } },
+                 highlight: { background: c.background, border: "#0f172a" },
+                 hover: { background: c.background, border: "#0f172a" } },
         shape: "box",
-        font: { color: "#111827", size: 15 },
-        widthConstraint: { minimum: 120, maximum: 160 },
-        heightConstraint: { minimum: 36 },
+        font: { multi: "html", face: "Inter, sans-serif", size: 13, color: "#334155",
+                bold: { color: "#0f172a", size: 15, face: "Inter, sans-serif" } },
+        margin: 12,
+        borderWidth: 1.5,
+        shadow: { enabled: true, color: "rgba(15,23,42,0.12)", size: 10, x: 0, y: 4 },
+        widthConstraint: { minimum: 132, maximum: 180 },
+        heightConstraint: { minimum: 42 },
       });
     });
 
@@ -61,9 +68,11 @@
                                 shakeTowards: "roots", levelSeparation: 170, nodeSpacing: 90,
                                 treeSpacing: 140, blockShifting: true, edgeMinimization: true,
                                 parentCentralization: true } },
-      edges: { arrows: "to", smooth: { type: "cubicBezier", forceDirection: "horizontal", roundness: 0.5 },
-               color: { color: "#94a3b8" }, width: 1.5 },
-      nodes: { margin: 10, borderWidth: 1, shapeProperties: { borderRadius: 6 } },
+      edges: { arrows: { to: { enabled: true, scaleFactor: 0.65 } },
+               smooth: { type: "cubicBezier", forceDirection: "horizontal", roundness: 0.55 },
+               color: { color: "#cbd5e1", highlight: "#6366f1", hover: "#94a3b8" },
+               width: 1.5, selectionWidth: 1, hoverWidth: 0 },
+      nodes: { shapeProperties: { borderRadius: 12 } },
       physics: false,
       interaction: { hover: true, tooltipDelay: 120, navigationButtons: true, keyboard: false },
     };

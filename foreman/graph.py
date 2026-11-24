@@ -8,7 +8,7 @@ Nodes are colored by job type (inferred from tags) and link to the job's detail 
 import json
 
 import r3
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, url_for
 
 from foreman.r3_extension import Repository
 
@@ -50,7 +50,7 @@ def view():
                     ]
                 ).strip(),
                 "group": _group(tags),
-                "url": f"/view/{jid}",
+                "url": url_for("job.view", id=jid),
             }
         )
 
