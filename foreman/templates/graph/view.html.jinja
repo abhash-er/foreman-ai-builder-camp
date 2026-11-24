@@ -1,0 +1,79 @@
+{% extends "base.html.jinja" %}
+
+{% block contents %}
+<div class="flex flex-col h-full">
+  <div class="flex flex-row items-center gap-4 mb-2">
+    <h1 class="text-lg font-medium">Provenance graph</h1>
+    <span class="text-sm text-gray-500">{{ job_count }} jobs · {{ edge_count }} dependency edges</span>
+    <div class="flex flex-row gap-3 text-xs ml-auto">
+      <span><span class="inline-block w-3 h-3 rounded-full align-middle" style="background:#60a5fa"></span> entry</span>
+      <span><span class="inline-block w-3 h-3 rounded-full align-middle" style="background:#f59e0b"></span> compute</span>
+      <span><span class="inline-block w-3 h-3 rounded-full align-middle" style="background:#34d399"></span> report</span>
+      <span><span class="inline-block w-3 h-3 rounded-full align-middle" style="background:#cbd5e1"></span> other</span>
+    </div>
+  </div>
+  <div id="network" class="flex-1 border border-gray-200 rounded" style="min-height: 70vh;"></div>
+</div>
+
+<!-- foreman's base template loads Monaco's AMD loader (defines define.amd); a UMD bundle would
+     register through it instead of creating window.vis. Neutralize define while vis-network loads. -->
+<script>window.__amd_define = window.define; window.define = undefined;</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js"></script>
+<script>
+  window.define = window.__amd_define; try { delete window.__amd_define; } catch (e) {}
+  (function () {
+    const container = document.getElementById("network");
+    if (typeof vis === "undefined" || !vis.Network) {
+      container.innerHTML = '<div class="p-4 text-sm text-red-600">vis-network failed to load '
+        + '(no internet for the CDN?). The graph needs it.</div>';
+      return;
+    }
+    const rawNodes = {{ nodes | safe }};
+    const edges = {{ edges | safe }};
+    const groupColors = {
+      entry:   { background: "#60a5fa", border: "#2563eb" },
+      compute: { background: "#f59e0b", border: "#b45309" },
+      report:  { background: "#34d399", border: "#059669" },
+      other:   { background: "#cbd5e1", border: "#64748b" },
+    };
+    const nodes = rawNodes.map(function (n) {
+      const c = groupColors[n.group] || groupColors.other;
+      const leaf = String(n.label).split("/").pop();   // compact, uniform labels
+      return Object.assign({}, n, {
+        label: leaf,
+        color: { background: c.background, border: c.border,
+                 highlight: { background: c.background, border: "#111827" } },
+        shape: "box",
+        font: { color: "#111827", size: 15 },
+        widthConstraint: { minimum: 120, maximum: 160 },
+        heightConstraint: { minimum: 36 },
+      });
+    });
+
+    const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+    const options = {
+      layout: { hierarchical: { enabled: true, direction: "LR", sortMethod: "directed",
+                                shakeTowards: "roots", levelSeparation: 170, nodeSpacing: 90,
+                                treeSpacing: 140, blockShifting: true, edgeMinimization: true,
+                                parentCentralization: true } },
+      edges: { arrows: "to", smooth: { type: "cubicBezier", forceDirection: "horizontal", roundness: 0.5 },
+               color: { color: "#94a3b8" }, width: 1.5 },
+      nodes: { margin: 10, borderWidth: 1, shapeProperties: { borderRadius: 6 } },
+      physics: false,
+      interaction: { hover: true, tooltipDelay: 120, navigationButtons: true, keyboard: false },
+    };
+    const network = new vis.Network(container, data, options);
+    // auto-fit once the hierarchical layout is drawn, so the default view is centered + framed.
+    network.once("afterDrawing", function () { network.fit({ animation: false }); });
+
+    // Click a node -> open its job detail page.
+    network.on("click", function (params) {
+      if (params.nodes && params.nodes.length) {
+        const node = data.nodes.get(params.nodes[0]);
+        if (node && node.url) window.location = node.url;
+      }
+    });
+    network.fit();
+  })();
+</script>
+{% endblock %}

@@ -9,6 +9,7 @@ from tensorboard.backend import application
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.serving import run_simple
 
+from foreman.graph import graph
 from foreman.job import job
 from foreman.job_list import job_list
 from foreman.job_tree import job_tree
@@ -27,6 +28,7 @@ app.register_blueprint(job)
 app.register_blueprint(job_list)
 app.register_blueprint(job_tree)
 app.register_blueprint(search)
+app.register_blueprint(graph)
 
 joint_app = DispatcherMiddleware(app)
 
