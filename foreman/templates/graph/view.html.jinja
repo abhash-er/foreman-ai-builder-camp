@@ -53,7 +53,7 @@
       const leaf = String(n.label).split("/").pop();        // compact, uniform labels
       const short = String(n.id).slice(0, 8);
       return Object.assign({}, n, {
-        label: "<b>" + leaf + "</b>\n<code>" + (n.experiment ? n.experiment + " · " : "") + short + "</code>",
+        label: "<b>" + leaf + "</b>" + (n.experiment ? "\n<code>" + n.experiment + "</code>" : ""),
         color: { background: c.background, border: c.border,
                  highlight: { background: c.background, border: "#0f172a" },
                  hover: { background: c.background, border: "#0f172a" } },
@@ -71,8 +71,8 @@
     const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
     const options = {
       layout: { hierarchical: { enabled: true, direction: "LR", sortMethod: "directed",
-                                shakeTowards: "roots", levelSeparation: 170, nodeSpacing: 90,
-                                treeSpacing: 140, blockShifting: true, edgeMinimization: true,
+                                shakeTowards: "roots", levelSeparation: 130, nodeSpacing: 70,
+                                treeSpacing: 110, blockShifting: true, edgeMinimization: true,
                                 parentCentralization: true } },
       edges: { arrows: { to: { enabled: true, scaleFactor: 0.65 } },
                smooth: { type: "cubicBezier", forceDirection: "horizontal", roundness: 0.55 },
@@ -84,7 +84,8 @@
     };
     const network = new vis.Network(container, data, options);
     // auto-fit once the hierarchical layout is drawn, so the default view is centered + framed.
-    network.once("afterDrawing", function () { network.fit({ animation: false }); });
+    function fitView(animate) { network.fit({ animation: !!animate, maxZoomLevel: 1.1 }); }
+    network.once("afterDrawing", function () { fitView(false); });
 
     // Click a node -> open its job detail page.
     network.on("click", function (params) {
@@ -109,11 +110,11 @@
       }
       data.nodes.clear(); data.nodes.add(ns);
       data.edges.clear(); data.edges.add(es);
-      network.fit({ animation: true });
+      fitView(true);
     }
     sel.addEventListener("change", function (e) { applyFilter(e.target.value); });
 
-    network.fit();
+    fitView(false);
   })();
 </script>
 {% endblock %}
