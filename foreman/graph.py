@@ -35,15 +35,21 @@ def view():
     nodes = []
     for job in jobs:
         jid = str(job.id)
-        label = job.virtual_path or job.name or jid[:8]
+        vpath = job.virtual_path or ""
+        segs = [s for s in vpath.split("/") if s]
+        leaf = segs[-1] if segs else (job.name or jid[:8])
+        # experiment = the grouping segment: project/<experiment>/... ; falls back sensibly.
+        experiment = segs[1] if len(segs) >= 3 else (segs[0] if segs else "ungrouped")
         tags = job.tags
         nodes.append(
             {
                 "id": jid,
-                "label": label,
+                "label": leaf,
+                "experiment": experiment,
+                "path": vpath,
                 "title": "\n".join(
                     [
-                        job.virtual_path or "",
+                        vpath,
                         f"id: {jid}",
                         f"status: {job.status}",
                         f"tags: {', '.join(tags)}" if tags else "",
