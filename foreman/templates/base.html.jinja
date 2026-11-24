@@ -5,43 +5,80 @@
 <head>
     <title>Foreman</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <link rel="stylesheet" href="{{ url_for('static', filename='output.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/datatables.net-dt/css/dataTables.dataTables.min.css') }}" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <!-- The Monaco Editor loader interferes with dataTables, so we have to include dataTables first -->
     <script src="{{ url_for('static', filename='node_modules/jquery/dist/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='node_modules/datatables.net/js/dataTables.js') }}"></script>   
+    <script src="{{ url_for('static', filename='node_modules/datatables.net/js/dataTables.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/htmx.org/dist/htmx.min.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/monaco-editor/min/vs/loader.js') }}"></script>
+
+    <style>
+        body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; }
+        .font-monospace, code, pre { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+        /* Polish the DataTables chrome to match the rest of the UI. */
+        .dataTables_wrapper { padding-top: .25rem; font-size: .875rem; color: #475569; }
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #e2e8f0; border-radius: .5rem; padding: .35rem .6rem;
+            margin-left: .4rem; outline: none; background: #fff;
+        }
+        .dataTables_wrapper .dataTables_filter input:focus,
+        .dataTables_wrapper .dataTables_length select:focus {
+            border-color: #6366f1; box-shadow: 0 0 0 3px #e0e7ff;
+        }
+        table.dataTable { border-collapse: separate; border-spacing: 0; }
+        table.dataTable thead th {
+            border-bottom: 1px solid #e2e8f0 !important; color: #64748b;
+            text-transform: uppercase; font-size: .7rem; letter-spacing: .04em; font-weight: 600;
+            padding: .6rem .75rem;
+        }
+        table.dataTable tbody td { padding: .6rem .75rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        table.dataTable tbody tr:hover { background: #f8fafc; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: .45rem !important; border: 1px solid transparent !important; padding: .25rem .6rem !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #6366f1 !important; color: #fff !important; border: none !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #eef2ff !important; color: #4338ca !important; border: 1px solid #e0e7ff !important;
+        }
+    </style>
 </head>
 
-<body>
+<body class="bg-slate-50 text-slate-800 antialiased">
+    {% set ep = request.endpoint %}
+    {% set link_base = "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" %}
+    {% set link_idle = "text-slate-600 hover:text-indigo-600 hover:bg-slate-100" %}
+    {% set link_active = "bg-indigo-50 text-indigo-700" %}
     <div class="flex flex-col h-screen">
-        <nav class="flex flex-row z-50 w-full bg-white border-b border-gray-200">
-            <div class="w-64 p-4">
-                <a class="" href="/">👷 Foreman</a>
-            </div>
-            <ul class="flex-1 flex flex-row font-medium bg-white">
-                <li class="m-4">
-                    <a class="hover:text-sky-600" href="{{ url_for('job_list.view') }}">Jobs</a>
-                </li>
-                <li class="m-4">
-                    <a class="hover:text-sky-600" href="{{ url_for('job_tree.view') }}">Browse
-                </li>
-                <li class="m-4">
-                    <a class="hover:text-sky-600" href="{{ url_for('graph.view') }}">Graph</a>
-                </li>
-                <li class="m-4">
-                    <a class="hover:text-sky-600" href="{{ url_for('search.index') }}">Search</a>
-                </li>
+        <nav class="sticky top-0 z-50 flex flex-row items-center w-full h-14 px-6 bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm">
+            <a class="flex items-center gap-2 font-semibold text-slate-900 mr-8" href="/">
+                <span class="text-lg">👷</span><span>Foreman</span>
+            </a>
+            <ul class="flex-1 flex flex-row items-center gap-1">
+                <li><a class="{{ link_base }} {{ link_active if ep == 'job_list.view' else link_idle }}" href="{{ url_for('job_list.view') }}">Jobs</a></li>
+                <li><a class="{{ link_base }} {{ link_active if ep == 'job_tree.view' else link_idle }}" href="{{ url_for('job_tree.view') }}">Browse</a></li>
+                <li><a class="{{ link_base }} {{ link_active if ep == 'graph.view' else link_idle }}" href="{{ url_for('graph.view') }}">Graph</a></li>
+                <li><a class="{{ link_base }} {{ link_active if ep == 'search.index' else link_idle }}" href="{{ url_for('search.index') }}">Search</a></li>
             </ul>
         </nav>
 
-        <main id="main" class="flex flex-row flex-1 overflow-y-auto bg-white">
+        <main id="main" class="flex flex-row flex-1 overflow-y-auto">
             {% block sidebar %}{% endblock %}
-            <div id="contents" class="{% if self.sidebar() %}sm:ml-64{% endif %} flex-1 px-4 py-4 overflow-y-auto">
-                {% block contents %}{% endblock %}       
+            <div id="contents" class="{% if self.sidebar() %}sm:ml-64 {% endif %}flex-1 overflow-y-auto">
+                <div class="max-w-[1400px] mx-auto w-full px-6 py-6">
+                    {% block contents %}{% endblock %}
+                </div>
             </div>
         </main>
     </div>

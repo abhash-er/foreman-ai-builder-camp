@@ -1,63 +1,72 @@
 {% macro status(status) -%}
     {% if status == "ready" %}
-    <span class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-400 border border-gray-500">Ready</span>
+    <span class="inline-flex items-center bg-slate-100 text-slate-700 text-xs font-medium px-2.5 py-0.5 rounded-full border border-slate-300">Ready</span>
     {% elif status == "queued" %}
-    <span class="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-yellow-300 border border-yellow-300">Queued</span>
+    <span class="inline-flex items-center bg-amber-50 text-amber-700 text-xs font-medium px-2.5 py-0.5 rounded-full border border-amber-300">Queued</span>
     {% elif status == "running" %}
-    <span class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-blue-400 border border-blue-400">Running</span>
+    <span class="inline-flex items-center bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-0.5 rounded-full border border-blue-300">Running</span>
     {% elif status == "done" %}
-    <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-green-400 border border-green-400">Done</span>
+    <span class="inline-flex items-center bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-0.5 rounded-full border border-emerald-300">Done</span>
     {% elif status == "completed" %}
-    <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-green-400 border border-green-400">Completed</span>
+    <span class="inline-flex items-center bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-0.5 rounded-full border border-emerald-300">Completed</span>
     {% elif status == "failed" %}
-    <span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-red-400 border border-red-400">Failed</span>
+    <span class="inline-flex items-center bg-red-50 text-red-700 text-xs font-medium px-2.5 py-0.5 rounded-full border border-red-300">Failed</span>
     {% else %}
-    <span class="bg-purple-100 text-purple-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-purple-400 border border-purple-400">{{ status }} (?)</span>
+    <span class="inline-flex items-center bg-purple-50 text-purple-700 text-xs font-medium px-2.5 py-0.5 rounded-full border border-purple-300">{{ status }} (?)</span>
     {% endif %}
 {%- endmacro %}
 
+{% macro action_link(text, href, target="") -%}
+<a href="{{ href }}" {% if target %}target="{{ target }}"{% endif %}
+   class="inline-flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline">{{ text }}</a>
+{%- endmacro %}
+
 {% macro jobs_table(jobs, table_id="jobs") -%}
-<table id="{{ table_id }}" class="table-auto">
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 overflow-x-auto">
+<table id="{{ table_id }}" class="table-auto w-full text-sm">
     <thead>
         <tr>
             <th>UUID</th>
             <th>Date</th>
             <th>Status</th>
-            <th>Tags</th>
+            <th>Path &amp; tags</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for job in jobs %}
         <tr>
-            <td class="font-monospace"><a href="{{ url_for('job.view', id=job.id) }}" class="underline text-sky-600 hover:no-underline hover:text-sky-400">{{ job.id }}</a></td>
-            <td class="font-monospace">{{ job.timestamp.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+            <td class="font-monospace"><a href="{{ url_for('job.view', id=job.id) }}" class="text-indigo-600 hover:text-indigo-800 hover:underline">{{ job.id[:8] }}<span class="text-slate-400">…</span></a></td>
+            <td class="font-monospace text-slate-500 whitespace-nowrap">{{ job.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
             <td>{{ status(job.status) }}</td>
             <td>
-                {% if job.virtual_path %}<strong>{{ job.virtual_path }}</strong><br>{% endif %}
-                {% for tag in job.tags %}#{{ tag }} {% endfor %}
+                {% if job.virtual_path %}<div class="font-semibold text-slate-800 mb-1">{{ job.virtual_path }}</div>{% endif %}
+                <div class="flex flex-wrap gap-1">
+                {% for tag in job.tags %}<span class="inline-block text-xs text-slate-500 bg-slate-100 rounded px-1.5 py-0.5">#{{ tag }}</span>{% endfor %}
+                </div>
             </td>
             <td>
-                <button type="button" class="underline text-sky-600 hover:no-underline hover:text-sky-400"
-                    onclick="navigator.clipboard.writeText('{{ job.path }}')">Copy Path</button>
-                <a href="/tensorboard/open/{{ job.id }}" target="_blank"
-                    class="underline text-sky-600 hover:no-underline hover:text-sky-400">Tensorboard</a>
+                <div class="flex flex-col gap-1">
+                <button type="button" class="inline-flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline text-left"
+                    onclick="navigator.clipboard.writeText('{{ job.path }}')">Copy path</button>
+                {{ action_link("Tensorboard", "/tensorboard/open/" ~ job.id, "_blank") }}
                 {% if job.has_report %}
-                <a href="{{ url_for('job.view', id=job.id, file='/output/report.html') }}" target="_blank"
-                    class="underline text-sky-600 hover:no-underline hover:text-sky-400">Report</a>
+                {{ action_link("Report", url_for('job.view', id=job.id, file='/output/report.html'), "_blank") }}
                 {% endif %}
+                </div>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+</div>
 
 <script>
     $(document).ready(function () {
         if ($.fn.DataTable.isDataTable('#{{ table_id }}')) {
             $('#{{ table_id }}').DataTable().destroy();
         }
-        $('#{{ table_id }}').DataTable({ "order": [[1, 'desc']] });
+        $('#{{ table_id }}').DataTable({ "order": [[1, 'desc']], "pageLength": 25 });
     });
 </script>
 {%- endmacro %}
