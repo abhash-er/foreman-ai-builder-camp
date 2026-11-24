@@ -59,20 +59,21 @@
                  hover: { background: c.background, border: "#0f172a" } },
         shape: "box",
         font: { multi: "html", face: "Inter, sans-serif", size: 13, color: "#334155",
-                bold: { color: "#0f172a", size: 15, face: "Inter, sans-serif" } },
+                bold: { color: "#0f172a", size: 14, face: "Inter, sans-serif" },
+                mono: { face: "'JetBrains Mono', ui-monospace, monospace", size: 10, color: "#94a3b8" } },
         margin: 12,
         borderWidth: 1.5,
         shadow: { enabled: true, color: "rgba(15,23,42,0.12)", size: 10, x: 0, y: 4 },
-        widthConstraint: { minimum: 132, maximum: 180 },
-        heightConstraint: { minimum: 42 },
+        widthConstraint: { minimum: 128, maximum: 230 },
+        heightConstraint: { minimum: 44 },
       });
     });
 
     const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
     const options = {
       layout: { hierarchical: { enabled: true, direction: "LR", sortMethod: "directed",
-                                shakeTowards: "roots", levelSeparation: 130, nodeSpacing: 70,
-                                treeSpacing: 110, blockShifting: true, edgeMinimization: true,
+                                shakeTowards: "roots", levelSeparation: 200, nodeSpacing: 100,
+                                treeSpacing: 130, blockShifting: true, edgeMinimization: true,
                                 parentCentralization: true } },
       edges: { arrows: { to: { enabled: true, scaleFactor: 0.65 } },
                smooth: { type: "cubicBezier", forceDirection: "horizontal", roundness: 0.55 },
